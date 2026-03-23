@@ -169,10 +169,9 @@ if uploaded_file is not None:
 
         st.divider()
 
-        # --- 第三排：词云 (Word Cloud) - 占据整行，极具视觉冲击力 ---
+        # --- 第三排：词云 (Word Cloud) ---
         st.subheader("☁️ 用户关注热点词云 (NLP)")
         
-        # 提取词频字典
         kw_df = engine.get_keywords(df['comment'].tolist())
         word_freq = dict(zip(kw_df['标签'], kw_df['权重']))
         
@@ -180,26 +179,32 @@ if uploaded_file is not None:
             with st.container():
                 st.markdown("<div id='wc-container'>", unsafe_allow_html=True)
                 
-                # 配置词云 (这里使用了黑蓝调风格以适配你的 UI)
-                # 注意：如果是 Windows 系统，通常需要指定中文字体路径，否则会乱码
-                font_path = "C:/Windows/Fonts/msyh.ttc" # 微软雅黑
+                # 【核心修复点】动态检测字体路径
+                import os
+                # 优先检查 Windows 路径，如果不存在（说明在云端），则设为 None
+                # Streamlit Cloud 环境通常会自动处理默认字体，或你可以之后上传一个字体文件到 GitHub
+                f_path = "C:/Windows/Fonts/msyh.ttc" if os.path.exists("C:/Windows/Fonts/msyh.ttc") else None
                 
-                wc = WordCloud(
-                    font_path=font_path,
-                    background_color="white",
-                    width=1200, # 宽度加大，占据整行
-                    height=400,
-                    colormap="Blues",  # 使用蓝色系
-                    max_words=100,
-                    relative_scaling=0.5
-                ).generate_from_frequencies(word_freq)
+                try:
+                    wc = WordCloud(
+                        font_path=f_path,  # 使用动态路径
+                        background_color="white",
+                        width=1200, 
+                        height=400,
+                        colormap="Blues",
+                        max_words=100,
+                        relative_scaling=0.5
+                    ).generate_from_frequencies(word_freq)
 
-                # 在 Streamlit 中显示
-                fig_wc, ax = plt.subplots(figsize=(12, 4))
-                ax.imshow(wc, interpolation='bilinear')
-                ax.axis("off")
-                plt.tight_layout(pad=0)
-                st.pyplot(fig_wc)
+                    fig_wc, ax = plt.subplots(figsize=(12, 4))
+                    ax.imshow(wc, interpolation='bilinear') # 确保是 bilinear
+                    ax.axis("off")
+                    plt.tight_layout(pad=0)
+                    st.pyplot(fig_wc)
+                except Exception as e:
+                    st.warning("词云渲染失败（可能是字体兼容性问题），已为您切换为数据列表：")
+                    st.dataframe(kw_df)
+                
                 st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.write("暂无足够数据生成词云")
