@@ -5,6 +5,7 @@ Created on Mon Mar 23 10:04:49 2026
 @author: lnn12
 """
 
+import os
 import streamlit as st
 import pandas as pd
 import jieba
