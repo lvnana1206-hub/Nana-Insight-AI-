@@ -84,7 +84,30 @@ with st.sidebar:
     st.markdown("<h2 class='nana-header'>Nana Insight</h2>", unsafe_allow_html=True)
     st.write("🌍 **多语种用户洞察引擎**")
     st.divider()
-    uploaded_file = st.file_uploader("上传您的评论 CSV 文件", type=["csv"])
+   # 作者介绍部分
+    st.markdown("### 👤 关于作者")
+    st.markdown("""
+    **吕娜娜 (LYU Nana)**
+    🎓 **上海交通大学 (SJTU)**
+    双学士 | 英语（比较文学与跨文化） 行政管理
+    硕士肄业
+    
+    🎯 **求职意向**：AI产品经理 / 用户运营
+    """)
+    
+    st.divider()
+    uploaded_file = st.file_uploader("📥 上传您的评论 CSV 文件", type=["csv"])
+    
+    # 新增：示例数据下载按钮
+    if os.path.exists("meituan_global_500.csv"):
+        with open("meituan_global_500.csv", "rb") as file:
+            st.download_button(
+                label="📑 下载示例数据进行体验",
+                data=file,
+                file_name="example_user_feedback.csv",
+                mime="text/csv",
+                help="点击下载美团海外版用户评论样例数据"
+            )
     st.info("💡 提示：系统已自动适配您的【评论、评分、地区】等字段。")
     st.markdown("<br><br><p style='color:#ccc'>Created by Nana @ SJTU</p>", unsafe_allow_html=True)
 
@@ -134,7 +157,7 @@ if uploaded_file is not None:
         engine = NanaGlobalEngine()
         df['sentiment'] = df['comment'].apply(engine.analyze_sentiment)
 
-        # --- 第一排：核心指标卡片 ---
+      
         c1, c2, c3, c4 = st.columns(4)
         with c1: st.metric("分析样本数", len(df))
         with c2:
@@ -148,7 +171,7 @@ if uploaded_file is not None:
 
         st.divider()
 
-        # --- 第二排：全局可视化 (情绪 + 地区) ---
+      
         col_l, col_r = st.columns([1, 1])
         with col_l:
             st.subheader("🎭 情绪健康度分布")
@@ -169,7 +192,7 @@ if uploaded_file is not None:
 
         st.divider()
 
-# --- 第三排：词云 (Word Cloud) ---
+
         st.subheader("☁️ 用户关注热点词云 (NLP)")
         
         kw_df = engine.get_keywords(df['comment'].tolist())
@@ -232,7 +255,6 @@ if uploaded_file is not None:
         st.divider()
 
         
-        # --- 新增模块：AI 自动化决策引擎 ---
         st.subheader("🤖 AI 自动化产品建议 (Beta)")
         auto_advices = engine.get_auto_suggestions(kw_df)
         
