@@ -169,7 +169,7 @@ if uploaded_file is not None:
 
         st.divider()
 
-      # --- 第三排：词云 (Word Cloud) ---
+# --- 第三排：词云 (Word Cloud) ---
         st.subheader("☁️ 用户关注热点词云 (NLP)")
         
         kw_df = engine.get_keywords(df['comment'].tolist())
@@ -179,23 +179,19 @@ if uploaded_file is not None:
             with st.container():
                 import os
                 
-                # 【终极雷达检测】自动寻找仓库里已有的字体文件
-                # 优先级：font.ttc > font.ttf > STXIHEI.ttf > 系统默认
-                possible_fonts = ["font.ttc", "font.ttf", "STXIHEI.ttf", "stxihei.ttf"]
-                f_path = None
-                
-                for f in possible_fonts:
-                    if os.path.exists(f):
-                        f_path = f
-                        break
-                
-                # 如果都没找到（本地调试用），再看 Windows 路径
-                if not f_path and os.path.exists("C:/Windows/Fonts/msyh.ttc"):
-                    f_path = "C:/Windows/Fonts/msyh.ttc"
+                # 直接锁定你仓库里已经存在的这两个文件之一
+                # 优先级：font.ttc > font.ttf
+                if os.path.exists("font.ttc"):
+                    f_path = "font.ttc"
+                elif os.path.exists("font.ttf"):
+                    f_path = "font.ttf"
+                else:
+                    f_path = None
 
                 try:
+                    # 这里的 WordCloud 初始化非常关键
                     wc = WordCloud(
-                        font_path=f_path,  # 使用检测到的路径
+                        font_path=f_path, 
                         background_color="white",
                         width=1200, 
                         height=400,
@@ -210,11 +206,9 @@ if uploaded_file is not None:
                     plt.tight_layout(pad=0)
                     st.pyplot(fig_wc)
                 except Exception as e:
-                    st.warning(f"⚠️ 字体加载中，请稍后刷新。检测到的文件列表: {os.listdir('.')}")
+                    # 如果走到这里，说明文件虽然在，但 WordCloud 读取它失败了
+                    st.error(f"字体读取失败，错误信息: {e}")
                     st.dataframe(kw_df)
-        else:
-            st.write("暂无足够数据生成词云")
-            
         
         # --- 新增模块：AI 自动化决策引擎 ---
         st.subheader("🤖 AI 自动化产品建议 (Beta)")
