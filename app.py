@@ -177,38 +177,60 @@ if uploaded_file is not None:
         
         if word_freq:
             with st.container():
+            
                 import os
                 
-                # 直接锁定你仓库里已经存在的这两个文件之一
-                # 优先级：font.ttc > font.ttf
-                if os.path.exists("font.ttc"):
-                    f_path = "font.ttc"
-                elif os.path.exists("font.ttf"):
-                    f_path = "font.ttf"
+                # 优先级 1：精准匹配你重命名后的文件 
+                if os.path.exists("stxihei.ttf"):
+                    f_path = "stxihei.ttf"
+                elif os.path.exists("STXIHEI.TTF"):
+                    f_path = "STXIHEI.TTF"
                 else:
                     f_path = None
 
                 try:
-                    # 这里的 WordCloud 初始化非常关键
-                    wc = WordCloud(
-                        font_path=f_path, 
-                        background_color="white",
-                        width=1200, 
-                        height=400,
-                        colormap="Blues",
-                        max_words=100,
-                        relative_scaling=0.5
-                    ).generate_from_frequencies(word_freq)
+                    if f_path:
+                        wc = WordCloud(
+                            font_path=f_path,
+                            background_color="white",
+                            width=1200, 
+                            height=400,
+                            colormap="Blues",
+                            max_words=100,
+                            prefer_horizontal=0.7 
+                        ).generate_from_frequencies(word_freq)
 
-                    fig_wc, ax = plt.subplots(figsize=(12, 4))
-                    ax.imshow(wc, interpolation='bilinear')
-                    ax.axis("off")
-                    plt.tight_layout(pad=0)
-                    st.pyplot(fig_wc)
+                        fig_wc, ax = plt.subplots(figsize=(12, 4))
+                        ax.imshow(wc, interpolation='bilinear')
+                        ax.axis("off")
+                        plt.tight_layout(pad=0)
+                        st.pyplot(fig_wc)
+                    else:
+                        raise FileNotFoundError("未检测到 stxihei.ttf")
+                        
                 except Exception as e:
-                    # 如果走到这里，说明文件虽然在，但 WordCloud 读取它失败了
-                    st.error(f"字体读取失败，错误信息: {e}")
-                    st.dataframe(kw_df)
+                    # 如果字体文件还是读不出来，自动切换为漂亮的柱状图（降级处理）
+                    st.warning("📊 词云渲染环境加载中，已为您切换为交互式频率看板：")
+                    
+                    import plotly.express as px
+                    fig_bar = px.bar(
+                        kw_df.head(15), 
+                        x='标签', 
+                        y='权重', 
+                        text='标签',
+                        color='权重',
+                        color_continuous_scale='Blues'
+                    )
+                    fig_bar.update_traces(textposition='outside')
+                    fig_bar.update_layout(showlegend=False, height=400)
+                    st.plotly_chart(fig_bar, use_container_width=True)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.write("暂无足够数据生成词云")
+
+        st.divider()
+
         
         # --- 新增模块：AI 自动化决策引擎 ---
         st.subheader("🤖 AI 自动化产品建议 (Beta)")
