@@ -169,7 +169,7 @@ if uploaded_file is not None:
 
         st.divider()
 
-        # --- 第三排：词云 (Word Cloud) ---
+       # --- 第三排：词云 (Word Cloud) ---
         st.subheader("☁️ 用户关注热点词云 (NLP)")
         
         kw_df = engine.get_keywords(df['comment'].tolist())
@@ -177,17 +177,22 @@ if uploaded_file is not None:
         
         if word_freq:
             with st.container():
-                st.markdown("<div id='wc-container'>", unsafe_allow_html=True)
-                
-                # 【核心修复点】动态检测字体路径
+                # 【终极修复】优先使用仓库自带的字体文件
                 import os
-                # 优先检查 Windows 路径，如果不存在（说明在云端），则设为 None
-                # Streamlit Cloud 环境通常会自动处理默认字体，或你可以之后上传一个字体文件到 GitHub
-                f_path = "C:/Windows/Fonts/msyh.ttc" if os.path.exists("C:/Windows/Fonts/msyh.ttc") else None
+                
+                # 1. 尝试使用仓库里的字体文件 (最稳定)
+                # 2. 如果没传，再尝试本地路径
+                # 3. 如果都失败，设为 None
+                if os.path.exists("font.ttc"):
+                    f_path = "font.ttc"
+                elif os.path.exists("C:/Windows/Fonts/msyh.ttc"):
+                    f_path = "C:/Windows/Fonts/msyh.ttc"
+                else:
+                    f_path = None
                 
                 try:
                     wc = WordCloud(
-                        font_path=f_path,  # 使用动态路径
+                        font_path=f_path,  # 现在的 f_path 更有保障了
                         background_color="white",
                         width=1200, 
                         height=400,
@@ -197,15 +202,14 @@ if uploaded_file is not None:
                     ).generate_from_frequencies(word_freq)
 
                     fig_wc, ax = plt.subplots(figsize=(12, 4))
-                    ax.imshow(wc, interpolation='bilinear') # 确保是 bilinear
+                    ax.imshow(wc, interpolation='bilinear')
                     ax.axis("off")
                     plt.tight_layout(pad=0)
                     st.pyplot(fig_wc)
                 except Exception as e:
-                    st.warning("词云渲染失败（可能是字体兼容性问题），已为您切换为数据列表：")
+                    # 如果还是不行，显示列表确保数据可见性
+                    st.warning("⚠️ 词云生成中... 请确保 GitHub 仓库已上传 font.ttc 文件")
                     st.dataframe(kw_df)
-                
-                st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.write("暂无足够数据生成词云")
 
